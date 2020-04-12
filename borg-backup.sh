@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name to give this backup within the borg repo
-BACKUP_NAME=home-$(date +%Y-%m-%dT%H.%M)
+BACKUP_NAME=archlinux-$(date +%Y-%m-%dT%H.%M)
 
 printf "\n\n ** Starting backup ${BACKUP_NAME} of home folder...\n"
 
@@ -21,24 +21,12 @@ if [[ ! "$BORG_S3_BACKUP_AWS_PROFILE" ]]; then
 	exit 1
 fi
 
-EXCLUDES_FILE=$(dirname $0)/excludes.txt
-if [ ! -f "${EXCLUDES_FILE}" ]; then
-	printf "\n ** Please create an excludes file (even if empty) at '${EXCLUDES_FILE}'.\n"
-	exit 1
-fi
-
 # Local borg backup
-borg create ::${BACKUP_NAME} \
-	${HOME} \
-	-v \
-	--stats \
-	--list \
-	--exclude-from ${EXCLUDES_FILE} \
-	--compression zlib,6
+printf "\nLocal ${BACKUP_NAME} backing up\n"
+borg create ${BORG_REPO}::${BACKUP_NAME} ${HOME} --exclude-from ${BORG_EXCLUDES}
+printf "\nLocal ${BACKUP_NAME} backup finished\n"
 
-# Define and store the backup's exit status
 OPERATION_STATUS=$?
-
 # Only continue if backup was actually successful
 if [ $OPERATION_STATUS == 0 ]; then
 	# Clean up old backups: keep 7 end of day and 4 additional end of week archives.
